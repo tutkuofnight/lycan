@@ -25,7 +25,7 @@ Lycan uses WebKitGTK to run web apps in standalone windows, generates `.desktop`
 ### Arch Linux (AUR)
 
 ```
-yay -S lycan-git
+yay -S lycan-bin
 ```
 
 ### Build from source
@@ -86,7 +86,3 @@ All data is stored under `~/.local/share/lycan/`. Each PWA gets its own director
 │   ├── config.json
 │   └── icon.png
 ```
-
-## License
-
-MIT
