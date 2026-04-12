@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use slug::slugify;
 use std::fs;
@@ -10,7 +9,7 @@ pub struct AppConfig {
     pub id: String,
     pub name: String,
     pub url: String,
-    pub created_at: DateTime<Utc>,
+    pub created_at: String,
 }
 
 impl AppConfig {
@@ -19,9 +18,55 @@ impl AppConfig {
             id: slugify(name),
             name: name.to_string(),
             url: url.to_string(),
-            created_at: Utc::now(),
+            created_at: now_iso8601(),
         }
     }
+}
+
+fn now_iso8601() -> String {
+    let dur = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default();
+    let secs = dur.as_secs();
+    let days = secs / 86400;
+    let time_secs = secs % 86400;
+    let h = time_secs / 3600;
+    let m = (time_secs % 3600) / 60;
+    let s = time_secs % 60;
+
+    let (y, mo, d) = days_to_ymd(days);
+    format!("{y:04}-{mo:02}-{d:02}T{h:02}:{m:02}:{s:02}Z")
+}
+
+fn days_to_ymd(mut days: u64) -> (u64, u64, u64) {
+    let mut y = 1970;
+    loop {
+        let ydays = if is_leap(y) { 366 } else { 365 };
+        if days < ydays {
+            break;
+        }
+        days -= ydays;
+        y += 1;
+    }
+    let leap = is_leap(y);
+    let mdays = [
+        31,
+        if leap { 29 } else { 28 },
+        31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
+    ];
+    let mut mo = 0;
+    for (i, &md) in mdays.iter().enumerate() {
+        if days < md {
+            mo = i as u64 + 1;
+            break;
+        }
+        days -= md;
+    }
+    (y, mo, days + 1)
+}
+
+fn is_leap(y: u64) -> bool {
+    (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
 }
 
 pub fn data_dir() -> Result<PathBuf> {

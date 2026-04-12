@@ -182,7 +182,7 @@ fn draw_table(f: &mut Frame, app: &App, area: Rect) {
                 Style::default()
             };
 
-            let date = a.created_at.format("%Y-%m-%d").to_string();
+            let date = a.created_at.get(..10).unwrap_or(&a.created_at).to_string();
 
             Row::new(vec![
                 Cell::from(marker).style(if is_selected {

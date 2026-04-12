@@ -14,14 +14,10 @@ pub fn fetch_and_save(site_url: &str, save_path: &std::path::Path) -> Result<()>
         fallback.to_string()
     });
 
-    let bytes = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .user_agent("Mozilla/5.0 (X11; Linux x86_64) Lycan/0.1")
-        .build()?
-        .get(&icon_url)
-        .send()
-        .context("Failed to download favicon")?
-        .bytes()
+    let resp = ureq::get(&icon_url).call().context("Failed to download favicon")?;
+    let bytes = resp
+        .into_body()
+        .read_to_vec()
         .context("Failed to read favicon bytes")?;
 
     if let Some(parent) = save_path.parent() {
@@ -34,8 +30,6 @@ pub fn fetch_and_save(site_url: &str, save_path: &std::path::Path) -> Result<()>
             resized.save_with_format(save_path, ImageFormat::Png)?;
         }
         Err(_) => {
-            // If image crate can't decode it (e.g. SVG), save raw bytes
-            // and hope the desktop environment can handle it
             std::fs::write(save_path, &bytes)?;
         }
     }
@@ -44,16 +38,8 @@ pub fn fetch_and_save(site_url: &str, save_path: &std::path::Path) -> Result<()>
 }
 
 fn find_best_icon(base_url: &Url) -> Option<String> {
-    let html = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .user_agent("Mozilla/5.0 (X11; Linux x86_64) Lycan/0.1")
-        .build()
-        .ok()?
-        .get(base_url.as_str())
-        .send()
-        .ok()?
-        .text()
-        .ok()?;
+    let resp = ureq::get(base_url.as_str()).call().ok()?;
+    let html = resp.into_body().read_to_string().ok()?;
 
     let document = Html::parse_document(&html);
 
