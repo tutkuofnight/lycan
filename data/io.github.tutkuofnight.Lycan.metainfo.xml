@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.tutkuofnight.Lycan</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Lycan</name>
+  <summary>Lightweight PWA manager for Linux desktops</summary>
+  <description>
+    <p>
+      Lycan is a lightweight PWA (Progressive Web App) manager that lets you create
+      desktop applications from any website. It uses WebKitGTK for minimal resource
+      consumption and integrates with your desktop environment via standard .desktop files.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Create PWAs from any URL with automatic favicon fetching</li>
+      <li>Built-in ad/tracker blocker for reduced resource usage</li>
+      <li>TUI interface for managing your PWA collection</li>
+      <li>XDG-compliant .desktop file generation</li>
+      <li>Works with i3, Hyprland, Sway, GNOME, KDE, and more</li>
+    </ul>
+  </description>
+  <url type="homepage">https://github.com/tutkuofnight/lycan</url>
+  <url type="bugtracker">https://github.com/tutkuofnight/lycan/issues</url>
+  <url type="vcs-browser">https://github.com/tutkuofnight/lycan</url>
+  <launchable type="desktop-id">io.github.tutkuofnight.Lycan.desktop</launchable>
+  <provides>
+    <binary>lycan</binary>
+  </provides>
+  <requires>
+    <display_length compare="ge">640</display_length>
+  </requires>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="0.1.0" date="2026-04-12">
+      <description>
+        <p>Initial release with core PWA management features.</p>
+      </description>
+    </release>
+  </releases>
+</component>

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Lycan
+Comment=Lightweight PWA manager for Linux desktops
+Exec=lycan
+Icon=io.github.tutkuofnight.Lycan
+Terminal=true
+Type=Application
+Categories=Network;Utility;
+Keywords=pwa;web;app;browser;

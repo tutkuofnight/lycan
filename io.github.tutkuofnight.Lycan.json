@@ -1,0 +1,46 @@
+{
+  "app-id": "io.github.tutkuofnight.Lycan",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "47",
+  "sdk": "org.gnome.Sdk",
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.rust-stable"
+  ],
+  "command": "lycan",
+  "finish-args": [
+    "--share=ipc",
+    "--share=network",
+    "--socket=x11",
+    "--socket=wayland",
+    "--socket=pulseaudio",
+    "--device=dri",
+    "--filesystem=~/.local/share/lycan:create",
+    "--filesystem=~/.local/share/applications:create"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/rust-stable/bin",
+    "env": {
+      "CARGO_HOME": "/run/build/lycan/cargo",
+      "RUST_BACKTRACE": "1"
+    }
+  },
+  "modules": [
+    {
+      "name": "lycan",
+      "buildsystem": "simple",
+      "build-commands": [
+        "cargo --offline fetch --manifest-path Cargo.toml --verbose",
+        "cargo --offline build --release --verbose",
+        "install -Dm755 target/release/lycan /app/bin/lycan",
+        "install -Dm644 data/io.github.tutkuofnight.Lycan.desktop /app/share/applications/io.github.tutkuofnight.Lycan.desktop",
+        "install -Dm644 data/io.github.tutkuofnight.Lycan.metainfo.xml /app/share/metainfo/io.github.tutkuofnight.Lycan.metainfo.xml"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "."
+        }
+      ]
+    }
+  ]
+}
