@@ -1,7 +1,6 @@
-<div style="display: flex; align-items: center; gap: 20px;">
-    <img src="assets/lycan.png" alt="Lycan logo" width="70" height="70" style="margin-top: 10px;" />
-    <h1>Lycan</h1>
-</div>
+<img src="assets/lycan.png" alt="Lycan logo" width="100" height="100" />
+
+# Lycan
 
 Lightweight PWA manager for Linux. Turn any website into a desktop application with minimal resource overhead.
 
