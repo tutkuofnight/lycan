@@ -10,11 +10,8 @@ Data lives under the XDG data directory (typically ~/.local/share/lycan/).";
 const AFTER_HELP: &str = "\
 Examples:
   lycan                      Start the TUI (manage PWAs)
-  lycan open my-app-id       Open the PWA whose id is `my-app-id`
-  lycan detect-system        Re-scan GPU / session and rewrite webkit-tuning.json
-
-Environment (optional overrides, see docs in source):
-  LYCAN_WEBKIT_DISABLE_DMABUF, LYCAN_WEBKIT_DISABLE_COMPOSITING — per-process WebKit hints";
+  lycan open app-name       Open the PWA whose name is `app-name`
+  lycan detect-system        Re-scan GPU / session and rewrite webkit-tuning.json for optimization";
 
 #[derive(Parser)]
 #[command(
