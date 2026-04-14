@@ -4,6 +4,8 @@ use slug::slugify;
 use std::fs;
 use std::path::PathBuf;
 
+use crate::fs_private;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
     pub id: String,
@@ -82,12 +84,25 @@ pub fn icon_path(app_id: &str) -> Result<PathBuf> {
     Ok(app_dir(app_id)?.join("icon.png"))
 }
 
+/// WebKit base data/cache + cookie store for this PWA (persists logins across launches).
+pub fn webview_data_dir(app_id: &str) -> Result<PathBuf> {
+    Ok(app_dir(app_id)?.join("webview"))
+}
+
 pub fn save(config: &AppConfig) -> Result<()> {
     let dir = app_dir(&config.id)?;
     fs::create_dir_all(&dir).context("Failed to create app directory")?;
+    fs_private::dir_owner_only(&dir).context("Failed to set permissions on app directory")?;
+
+    let apps_root = data_dir()?;
+    if apps_root.exists() {
+        let _ = fs_private::dir_owner_only(&apps_root);
+    }
+
     let path = dir.join("config.json");
     let json = serde_json::to_string_pretty(config)?;
     fs::write(&path, json).context("Failed to write config")?;
+    fs_private::file_owner_only(&path).context("Failed to set permissions on config.json")?;
     Ok(())
 }
 

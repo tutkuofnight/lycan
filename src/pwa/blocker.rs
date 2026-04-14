@@ -1,8 +1,3 @@
-use webkit2gtk::{
-    UserContentInjectedFrames, UserContentManager, UserContentManagerExt as _, UserScript,
-    UserScriptInjectionTime,
-};
-
 const BLOCKED_DOMAINS: &[&str] = &[
     "doubleclick.net",
     "googlesyndication.com",
@@ -38,60 +33,63 @@ const BLOCKED_DOMAINS: &[&str] = &[
     "clarity.ms",
 ];
 
-pub fn apply(content_manager: &UserContentManager) {
-    let domain_checks: String = BLOCKED_DOMAINS
+pub fn script() -> String {
+    let domain_list: String = BLOCKED_DOMAINS
         .iter()
-        .map(|d| format!("url.includes('{}')", d))
+        .map(|d| format!("'{d}'"))
         .collect::<Vec<_>>()
-        .join(" || ");
+        .join(",");
 
-    let script_source = format!(
+    format!(
         r#"
 (function() {{
-    const isBlocked = (url) => {domain_checks};
-
-    // Block fetch requests to ad/tracker domains
-    const origFetch = window.fetch;
-    window.fetch = function(input, init) {{
-        const url = (typeof input === 'string') ? input : input.url;
-        if (isBlocked(url)) return Promise.reject(new Error('blocked'));
-        return origFetch.apply(this, arguments);
+    const _bd = new Set([{domain_list}]);
+    const isBlocked = (raw) => {{
+        try {{
+            const h = new URL(raw, location.href).hostname;
+            for (const d of _bd) {{ if (h === d || h.endsWith('.' + d)) return true; }}
+        }} catch(_) {{}}
+        return false;
     }};
 
-    // Block XMLHttpRequest to ad/tracker domains
-    const origOpen = XMLHttpRequest.prototype.open;
+    const _f = window.fetch;
+    window.fetch = function(input, init) {{
+        const u = (typeof input === 'string') ? input : (input && input.url) || '';
+        if (isBlocked(u)) return Promise.resolve(new Response('', {{status: 200, statusText: 'OK'}}));
+        return _f.apply(this, arguments);
+    }};
+
+    const _xo = XMLHttpRequest.prototype.open;
+    const _xs = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.open = function(method, url) {{
-        if (isBlocked(url)) {{
-            this._blocked = true;
+        this._blockedUrl = isBlocked(String(url || ''));
+        if (!this._blockedUrl) return _xo.apply(this, arguments);
+    }};
+    XMLHttpRequest.prototype.send = function() {{
+        if (this._blockedUrl) {{
+            Object.defineProperty(this, 'status', {{value: 200, writable: false}});
+            Object.defineProperty(this, 'readyState', {{value: 4, writable: false}});
+            Object.defineProperty(this, 'responseText', {{value: '', writable: false}});
+            Object.defineProperty(this, 'response', {{value: '', writable: false}});
+            if (typeof this.onreadystatechange === 'function') {{
+                try {{ this.onreadystatechange(new Event('readystatechange')); }} catch(_) {{}}
+            }}
+            if (typeof this.onload === 'function') {{
+                try {{ this.onload(new Event('load')); }} catch(_) {{}}
+            }}
             return;
         }}
-        return origOpen.apply(this, arguments);
-    }};
-    const origSend = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.send = function() {{
-        if (this._blocked) return;
-        return origSend.apply(this, arguments);
+        return _xs.apply(this, arguments);
     }};
 
-    // Block beacon requests
-    const origBeacon = navigator.sendBeacon;
-    if (origBeacon) {{
+    if (navigator.sendBeacon) {{
+        const _sb = navigator.sendBeacon.bind(navigator);
         navigator.sendBeacon = function(url) {{
-            if (isBlocked(url)) return true;
-            return origBeacon.apply(this, arguments);
+            if (isBlocked(String(url))) return true;
+            return _sb.apply(this, arguments);
         }};
     }}
 }})();
 "#
-    );
-
-    let script = UserScript::new(
-        &script_source,
-        UserContentInjectedFrames::AllFrames,
-        UserScriptInjectionTime::Start,
-        &[],
-        &[],
-    );
-
-    content_manager.add_script(&script);
+    )
 }

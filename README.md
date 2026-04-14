@@ -2,23 +2,27 @@
 
 Lightweight PWA manager for Linux. Turn any website into a desktop application with minimal resource overhead.
 
-Lycan uses WebKitGTK to run web apps in standalone windows, generates `.desktop` files for menu integration, and includes a built-in ad/tracker blocker to keep things lean.
+Lycan uses [wry](https://github.com/tauri-apps/wry) (WebKitGTK) to run web apps in standalone windows, generates `.desktop` files for menu integration, and includes a built-in ad/tracker blocker. Each PWA gets its own on-disk profile so logins and site data persist between launches.
 
 ## Features
 
-- **TUI interface** for managing your PWA collection — add, edit, delete, search
-- **Automatic favicon fetching** from URLs
-- **`.desktop` file generation** for rofi, dmenu, application menus
-- **Ad/tracker blocking** — blocks 35+ common ad and tracking domains at the network level
-- **NVIDIA detection** — automatically applies software rendering workarounds
-- **X11 and Wayland** support
+- **TUI** — add, edit, delete, search PWAs (`lycan` with no arguments)
+- **CLI** — `lycan open <app-id>`, `lycan detect-system`, `lycan --help` / `--version`
+- **Persistent sessions** — per-app WebKit data under `apps/<id>/webview/` (cookies, storage, cache)
+- **Private data layout** — app directories and `config.json` use restrictive Unix permissions (`0700` / `0600`) where supported
+- **Automatic favicon fetching** from the site URL
+- **`.desktop` files** for rofi, dmenu, and application menus
+- **Ad/tracker blocking** — in-page hooks on `fetch`, `XMLHttpRequest`, and `sendBeacon` for 35+ common ad/tracking domains
+- **WebKit tuning profile** — `~/.local/share/lycan/webkit-tuning.json` is created on first run from GPU/session heuristics (e.g. DMA-BUF workaround on NVIDIA; optional compositing hints on Wayland + NVIDIA). Re-run after hardware or session changes with `lycan detect-system`
+- **Performance-oriented defaults** — WebKit `Settings` tuned for GPU use, DNS prefetch, page cache, media; developer tools only in debug builds
+- **Optional environment overrides** — `LYCAN_WEBKIT_DISABLE_DMABUF`, `LYCAN_WEBKIT_DISABLE_COMPOSITING` (see `lycan --help`)
+- **X11 and Wayland** — no forced GDK backend; works on both when your GTK/WebKit stack does
 
 ## Dependencies
 
 - `gtk3`
-- `webkit2gtk`
+- `webkit2gtk` (pulled in by wry)
 - `glib2`
-- `openssl`
 
 ## Installation
 
@@ -39,16 +43,28 @@ cp target/release/lycan ~/.local/bin/
 
 ## Usage
 
+Show all commands and options:
+
+```
+lycan --help
+```
+
 Launch the TUI to manage your PWAs:
 
 ```
 lycan
 ```
 
-Open an existing PWA directly:
+Open an existing PWA by its **app id** (same as the folder name under `apps/`):
 
 ```
 lycan open <app-id>
+```
+
+After changing GPU, drivers, or switching between X11 and Wayland, refresh WebKit hints:
+
+```
+lycan detect-system
 ```
 
 ### TUI keybindings
@@ -68,21 +84,28 @@ lycan open <app-id>
 When you add a PWA, Lycan:
 
 1. Fetches the favicon from the URL and saves it locally
-2. Creates a config file in `~/.local/share/lycan/apps/<app-id>/`
-3. Generates a `.desktop` file in `~/.local/share/applications/`
+2. Creates a directory `~/.local/share/lycan/apps/<app-id>/` with `config.json` (and later `webview/` when you open it)
+3. Writes a `.desktop` file under `~/.local/share/applications/`
 
-When you open a PWA, it launches a WebKitGTK window with the configured URL, using a Chrome user agent for maximum site compatibility.
+On first `lycan` or `lycan open`, if missing, **`webkit-tuning.json`** is written next to `apps/` with WebKit-related flags inferred from your system.
+
+When you open a PWA, Lycan starts a GTK window with a wry WebView, a **persistent** WebKit context rooted at `apps/<app-id>/webview/`, a Chrome-like user agent for compatibility, and the blocker initialization script. Release builds do not enable the Web Inspector.
 
 ## Configuration
 
-All data is stored under `~/.local/share/lycan/`. Each PWA gets its own directory:
+Data lives under **`$XDG_DATA_HOME/lycan`** (usually `~/.local/share/lycan/`):
 
 ```
-~/.local/share/lycan/apps/
-├── whatsapp/
-│   ├── config.json
-│   └── icon.png
-├── youtube/
-│   ├── config.json
-│   └── icon.png
+~/.local/share/lycan/
+├── webkit-tuning.json          # GPU / session hints (regenerate: lycan detect-system)
+└── apps/
+    ├── whatsapp/
+    │   ├── config.json
+    │   ├── icon.png
+    │   └── webview/            # WebKit profile (created on first open)
+    └── youtube/
+        ├── config.json
+        └── icon.png
 ```
+
+Deleting a PWA from the TUI removes its entire `apps/<app-id>/` tree (including `webview/`).

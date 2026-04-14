@@ -32,6 +32,11 @@
   </requires>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="0.1.1" date="2026-04-14">
+      <description>
+        <p>WebKit performance tuning, persistent PWA profiles, private directory permissions, hardware-based webkit-tuning.json with detect-system CLI, expanded --help, README updates, and dependency cleanup.</p>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-04-12">
       <description>
         <p>Initial release with core PWA management features.</p>

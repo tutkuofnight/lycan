@@ -1,6 +1,6 @@
 [package]
 name = "lycan"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Lightweight PWA manager for Linux desktops"
 license = "MIT"
@@ -10,9 +10,10 @@ authors = ["tutkuofnight"]
 [dependencies]
 ratatui = "0.29"
 crossterm = "0.28"
+wry = { version = "0.55", features = ["devtools"] }
 gtk = "0.18"
-webkit2gtk = { version = "2.0", features = ["v2_6"] }
 glib = "0.18"
+webkit2gtk = { version = "2.0.2", default-features = false, features = ["v2_40"] }
 clap = { version = "4", features = ["derive"] }
 ureq = "3"
 scraper = "0.21"

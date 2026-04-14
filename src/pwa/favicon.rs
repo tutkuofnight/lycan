@@ -1,5 +1,7 @@
 use anyhow::{Context, Result};
 use image::ImageFormat;
+
+use crate::fs_private;
 use scraper::{Html, Selector};
 use url::Url;
 
@@ -33,6 +35,8 @@ pub fn fetch_and_save(site_url: &str, save_path: &std::path::Path) -> Result<()>
             std::fs::write(save_path, &bytes)?;
         }
     }
+
+    let _ = fs_private::file_owner_only(save_path);
 
     Ok(())
 }
