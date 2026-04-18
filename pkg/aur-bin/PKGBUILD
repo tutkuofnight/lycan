@@ -1,6 +1,6 @@
 # Maintainer: tutkuofnight <https://github.com/tutkuofnight>
 pkgname=lycan-bin
-pkgver=0.1.1
+pkgver=0.1.2
 pkgrel=1
 pkgdesc="Lightweight PWA manager for Linux desktops"
 arch=('x86_64')
