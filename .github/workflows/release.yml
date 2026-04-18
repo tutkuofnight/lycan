@@ -28,9 +28,17 @@ jobs:
 
       - name: Package binary
         run: |
-          cd target/release
-          tar czf lycan-${GITHUB_REF_NAME}-x86_64-linux.tar.gz lycan
-          sha256sum lycan-${GITHUB_REF_NAME}-x86_64-linux.tar.gz > lycan-${GITHUB_REF_NAME}-x86_64-linux.tar.gz.sha256
+          staging=$(mktemp -d)
+          cp target/release/lycan "$staging/"
+          cp data/io.github.tutkuofnight.Lycan.desktop "$staging/"
+          cp data/io.github.tutkuofnight.Lycan.metainfo.xml "$staging/"
+          cp assets/lycan.png "$staging/io.github.tutkuofnight.Lycan.png"
+          tar -C "$staging" -czf "target/release/lycan-${GITHUB_REF_NAME}-x86_64-linux.tar.gz" \
+            lycan \
+            io.github.tutkuofnight.Lycan.desktop \
+            io.github.tutkuofnight.Lycan.metainfo.xml \
+            io.github.tutkuofnight.Lycan.png
+          (cd target/release && sha256sum "lycan-${GITHUB_REF_NAME}-x86_64-linux.tar.gz" > "lycan-${GITHUB_REF_NAME}-x86_64-linux.tar.gz.sha256")
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
